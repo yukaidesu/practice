@@ -8,8 +8,10 @@ from sqlalchemy import (
         String,
         DateTime,
         Enum,
+        ForeignKey,
 )
-print(sqlalchemy.__version__)
+# 外部キーを設定したいですこれで↓
+from sqlalchemy.orm import declarative_base, relationship
 
 # CURRENT_TIMESTAMP関数を利用するためにインポート
 from sqlalchemy.sql.functions import current_timestamp
@@ -37,7 +39,8 @@ class JobType(str, enum.Enum):
 # usersテーブルのモデルUsers
 class Users(Base):
     __tablename__ = 'Users'
-    id = Column(BigInteger, nullable=False, default=0, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+    Belongs = relationship("Belongs", back_populates="user", uselist=False)
     name = Column(String(255), nullable=False, default="1")
     birth = Column(DateTime, nullable=False)
     gender = Column(Enum(GenderType, values_callable=lambda x: [e.value for e in x]), nullable=False)
@@ -50,6 +53,7 @@ class Users(Base):
 class Divisions(Base):
     __tablename__ = 'Divisions'
     id = Column(BigInteger, nullable=False, default=0, primary_key=True, autoincrement=True)
+    Belongs = relationship("Belongs", back_populates="division")
     name = Column(String(255), nullable=False, default="1")
     leader_user_id = Column(BigInteger, nullable=False)
     start_at = Column(DateTime, nullable=False)
@@ -57,7 +61,9 @@ class Divisions(Base):
 class Belongs(Base):
     __tablename__ = 'Belongs'
     id = Column(BigInteger, nullable=False, default=0, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, nullable=False, default=1)
-    division_id = Column(BigInteger, nullable=False)
+    user_id = Column(BigInteger, ForeignKey("Users.id"), unique=True, nullable=False, default=1)
+    user = relationship("Users", back_populates="Belongs")
+    division_id = Column(BigInteger, ForeignKey("Divisions.id"), nullable=False)
+    division = relationship("Divisions", back_populates="Belongs")
     start_at = Column(DateTime, nullable=False)
     end_at = Column(DateTime)
